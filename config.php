@@ -42,6 +42,23 @@ function redirect($url) {
     exit;
 }
 
+// CSRF protection (Synchronizer Token pattern).
+// Token хранится в сессии и должен быть передан клиентом при небезопасных запросах.
+function csrf_token(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        // random_bytes -> base64url, чтобы токен корректно передавался как строка.
+        $_SESSION['csrf_token'] = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_validate($token): bool {
+    if (empty($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    return hash_equals((string)$_SESSION['csrf_token'], (string)$token);
+}
+
 // Функция для загрузки изображений
 function uploadImage($file) {
     $target_dir = "uploads/products/";
